@@ -29,6 +29,7 @@ export const translations = {
     webgl_error: "Tu navegador o dispositivo no soporta WebGL.",
     assets_error: "No se pudieron cargar algunas texturas. Revisa tu conexión.",
     credits: "Datos: NASA POWER · Texturas: NASA Blue Marble",
+    toast_audio: "Haz clic o presiona cualquier tecla para escuchar la bienvenida.",
 
     // Frases dinámicas (se leen con la voz del navegador)
     voz_temp_hora:
@@ -151,6 +152,7 @@ export const translations = {
     webgl_error: "Your browser or device does not support WebGL.",
     assets_error: "Some textures failed to load. Check your connection.",
     credits: "Data: NASA POWER · Textures: NASA Blue Marble",
+    toast_audio: "Click or press any key to hear the welcome message.",
 
     // Dynamic phrases (read with the browser voice)
     voz_temp_hora:
