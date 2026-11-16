@@ -1,0 +1,10 @@
+{
+  "name": "earth-jukebox",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "guion": "node tools/generar-guion.mjs",
+    "voces": "node tools/revisar-voces.mjs"
+  }
+}
