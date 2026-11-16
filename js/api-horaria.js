@@ -1,7 +1,7 @@
 // js/api-horaria.js - Temperatura por hora (NASA POWER, endpoint "hourly")
 // api.js no se toca: este archivo es aparte.
 
-export const DATA_START = "20260101";
+export const DATA_START = "20260107"; // solo se usa el día final
 export const DATA_END = "20260107"; // día cuyo ciclo horario se muestra
 
 export async function getHourlyTemperatures(lat, lon) {
