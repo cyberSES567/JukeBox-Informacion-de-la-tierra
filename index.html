@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#030308" />
+    <meta
+      name="description"
+      content="Earth Jukebox - Exploración científica de la Tierra mediante visualización 3D y sonificación de datos ambientales."
+    />
+    <meta property="og:title" content="Earth Jukebox | NASA Space Apps 2026" />
+    <meta
+      property="og:description"
+      content="Explora la Tierra en 3D y escucha sus datos climáticos."
+    />
+
+    <title>Earth Jukebox | NASA Space Apps 2026</title>
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Three.js -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <link
+      rel="modulepreload"
+      href="https://unpkg.com/three@0.160.0/build/three.module.js"
+    />
+  </head>
+
+  <body>
+    <noscript>
+      <p class="noscript">Earth Jukebox requiere JavaScript / requires JavaScript.</p>
+    </noscript>
+
+    <div id="app" role="application" aria-label="Earth Jukebox">
+    <!-- Mensajes para lector de pantalla / braille (se usa cuando la voz propia está apagada) -->
+    <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
+
+    <!-- ================= INTRO ================= -->
+    <div id="intro-screen" class="intro-screen">
+      <div class="cyber-overlay"></div>
+
+      <div class="cyber-menu">
+        <div class="logo-container">
+          <h1 class="glitch-text" data-text="EARTH">EARTH</h1>
+          <h1 class="glitch-text text-red" data-text="JUKEBOX">JUKEBOX</h1>
+          <p class="subtitle">NASA SPACE APPS // 2026</p>
+        </div>
+
+        <div class="menu-options">
+          <div class="lang-selector">
+            <label for="lang-select" data-i18n="config_lang">
+              CONFIGURACIÓN DE SISTEMA (IDIOMA):
+            </label>
+            <select id="lang-select" class="cyber-select">
+              <option value="es">Español (ES)</option>
+              <option value="en">English (EN)</option>
+            </select>
+          </div>
+
+          <fieldset id="mode-picker" class="mode-picker">
+            <legend data-i18n="mode_label">MODO DE ACCESIBILIDAD:</legend>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="blind" checked />
+              <span class="mode-title" data-i18n="mode_blind">CIEGOS · VOZ</span>
+              <span class="mode-desc" data-i18n="mode_blind_desc">Voz guiada y teclado</span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="deaf" />
+              <span class="mode-title" data-i18n="mode_deaf">SORDOS · VISUAL</span>
+              <span class="mode-desc" data-i18n="mode_deaf_desc">Subtítulos, gráficos y vibración</span>
+            </label>
+          </fieldset>
+
+          <button id="btn-enter" class="cyber-btn main-btn" data-i18n="travel">
+            VIAJAR A LA TIERRA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SUBTÍTULOS ================= -->
+    <!-- Muestran lo mismo que dice la voz. Los lectores de pantalla usan #sr-status. -->
+    <div id="captions" class="captions hidden" aria-hidden="true">
+      <span class="captions-tag" data-i18n="captions_tag">SUBTÍTULOS</span>
+      <p id="captions-text"></p>
+      <button id="captions-close" type="button" tabindex="-1" aria-label="Cerrar subtítulos">X</button>
+    </div>
+
+    <!-- ================= CANVAS ================= -->
+    <div id="canvas-container" aria-hidden="true"></div>
+
+    <!-- ================= CARGA / AVISOS ================= -->
+    <div id="loader" class="loader hidden" role="status">
+      <span data-i18n="loading">CARGANDO TEXTURAS</span>
+      <div class="loader-track"><div id="loader-bar" class="loader-bar"></div></div>
+    </div>
+
+    <div id="toast" class="toast" role="alert"></div>
+
+    <!-- ================= HUD ================= -->
+    <div class="hud-overlay hidden" id="hud-overlay">
+      <!-- Controles accesibles: invisibles hasta que reciben foco (Tab) -->
+      <section id="a11y-panel" class="a11y-panel" aria-labelledby="a11y-title">
+        <h2 id="a11y-title" data-i18n="a11y_title">CONTROLES ACCESIBLES</h2>
+
+        <h3 data-i18n="a11y_zones">ZONAS</h3>
+        <div id="a11y-zones" class="a11y-grid"></div>
+
+        <h3 data-i18n="a11y_actions">ACCIONES</h3>
+        <div class="a11y-grid">
+          <button type="button" class="a11y-btn" data-action="help" data-i18n="a11y_help">Ayuda (H)</button>
+          <button type="button" class="a11y-btn" data-action="list" data-i18n="a11y_list">Lista de zonas (L)</button>
+          <button type="button" class="a11y-btn" data-action="temp" data-i18n="a11y_temp">Temperatura (T)</button>
+          <button type="button" class="a11y-btn" data-action="minmax" data-i18n="a11y_minmax">Máxima y mínima (M)</button>
+          <button type="button" class="a11y-btn" data-action="describe" data-i18n="a11y_describe">Describir impacto (D)</button>
+          <button type="button" class="a11y-btn" data-action="sonify" data-i18n="play_data">SONIFICAR TEMPERATURAS</button>
+          <button type="button" class="a11y-btn" data-action="hourPrev" data-i18n="a11y_hour_prev">Hora anterior (←)</button>
+          <button type="button" class="a11y-btn" data-action="hourNext" data-i18n="a11y_hour_next">Hora siguiente (→)</button>
+          <button type="button" class="a11y-btn" data-action="live" data-i18n="live">EN VIVO</button>
+          <button type="button" class="a11y-btn" data-action="global" data-i18n="back">VISTA GLOBAL</button>
+          <button type="button" class="a11y-btn" data-action="lang" data-i18n="a11y_lang">Cambiar idioma (I)</button>
+          <button type="button" class="a11y-btn" data-action="mode" data-i18n="a11y_mode">Modo ciegos / sordos (A)</button>
+          <button type="button" class="a11y-btn" data-action="captions" data-i18n="a11y_captions">Subtítulos (C)</button>
+          <button type="button" class="a11y-btn" data-action="voice" data-i18n="a11y_voice">Voz propia / lector (R)</button>
+          <button type="button" class="a11y-btn" data-action="silence" data-i18n="a11y_silence">Silenciar (X)</button>
+        </div>
+      </section>
+
+      <header class="hud-header">
+        <div class="logo">EARTH<span class="text-red">_</span>JUKEBOX</div>
+
+        <div class="hud-stats">
+          <div class="clock-container">
+            <span id="hud-time-local">Local: --:--</span>
+            <span id="hud-time-utc">UTC: --:--</span>
+          </div>
+
+          <span data-i18n="status">ESTADO:</span>
+          <span class="text-cyan" data-i18n="online">ONLINE</span>
+
+          <button id="btn-mode" class="abort-btn" type="button" data-action="mode">MODO: VOZ</button>
+          <button id="btn-captions" class="abort-btn is-active" type="button" data-action="captions" aria-pressed="true" title="Subtítulos / Captions (C)">CC</button>
+          <button id="btn-reset-view" class="abort-btn" data-i18n="back">
+            VISTA GLOBAL
+          </button>
+          <button id="btn-abort" class="abort-btn" data-i18n="abort">
+            ABORTAR MISIÓN
+          </button>
+        </div>
+      </header>
+
+      <!-- Panel de información -->
+      <aside
+        id="info-panel"
+        class="cyber-panel"
+        aria-hidden="true"
+        inert
+      >
+        <div class="panel-header">
+          <span class="panel-title" id="panel-title" data-i18n="zone">
+            ZONA SELECCIONADA
+          </span>
+          <button id="btn-close-panel" aria-label="Cerrar panel / Close panel">
+            X
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <div class="data-row">
+            <span data-i18n="coords">COORDENADAS:</span>
+            <span id="panel-coords" class="text-cyan">--</span>
+          </div>
+
+          <div class="data-row">
+            <span data-i18n="localtime">HORA SOLAR ESTIMADA:</span>
+            <span id="panel-time" class="text-cyan">--</span>
+          </div>
+
+          <div class="data-row">
+            <span data-i18n="data">TEMPERATURA:</span>
+            <span id="panel-temp" class="text-red">--</span>
+          </div>
+
+          <div id="panel-source" class="data-row source-row"></div>
+
+          <div class="data-row">
+            <span data-i18n="minmax_label">MÁX / MÍN:</span>
+            <span id="panel-minmax" class="text-cyan">--</span>
+          </div>
+
+          <div id="chart-wrap" class="chart-wrap" hidden aria-hidden="true">
+            <div class="chart-title" data-i18n="chart_title">TEMPERATURA POR HORA (UTC)</div>
+            <div id="chart-readout" class="chart-readout"></div>
+            <div id="temp-chart" class="temp-chart"></div>
+            <div class="chart-axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+          </div>
+
+          <div class="terminal-text" id="panel-desc">
+            <span id="typed-text"></span><span class="cursor">_</span>
+          </div>
+
+          <div class="btn-row">
+            <button
+              id="btn-play-data"
+              class="cyber-btn"
+              data-i18n="play_data"
+              data-idle="play_data"
+              disabled
+            >
+              SONIFICAR TEMPERATURAS
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Footer -->
+      <div class="hud-footer">
+        <p class="footer-hint" data-i18n="footer">
+          > SELECCIONA UN PUNTO EN EL PLANETA
+        </p>
+
+        <div class="time-control">
+          <label for="time-slider" data-i18n="sim_time">SIMULAR HORA</label>
+          <input
+            id="time-slider"
+            type="range"
+            min="-720"
+            max="720"
+            step="5"
+            value="0"
+          />
+          <span id="sim-label" class="text-cyan">UTC --:--</span>
+          <button id="btn-live" class="abort-btn is-active" data-i18n="live">
+            EN VIVO
+          </button>
+        </div>
+
+        <p class="footer-credits" data-i18n="credits">
+          Datos: NASA POWER · Texturas: NASA Blue Marble
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
