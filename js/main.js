@@ -492,6 +492,8 @@ export class EarthScene {
     if (!width || !height) return;
 
     this.camera.aspect = width / height;
+    // En pantallas verticales se abre el campo de visión para que el globo no se corte
+    this.camera.fov = this.camera.aspect < 1 ? Math.min(78, 45 / Math.max(this.camera.aspect, 0.58)) : 45;
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(width, height);
